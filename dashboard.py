@@ -8,7 +8,7 @@ import secrets
 from functools import wraps
 
 # ================= CONFIGURACIÓN =================
-TOKEN = os.getenv("TOKEN")  # Pon tu token aquí si no usas variables de entorno
+TOKEN = os.getenv("DISCORD_TOKEN")  # Pon tu token aquí si no usas variables de entorno
 WEB_PASSWORD = "admin123"  # CAMBIA ESTO por tu contraseña segura
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -490,4 +490,4 @@ async def on_ready():
 
 if __name__ == "__main__":
     threading.Thread(target=run_flask, daemon=True).start()
-    bot.run(TOKEN)
+    bot.run(DISCORD_TOKEN)
