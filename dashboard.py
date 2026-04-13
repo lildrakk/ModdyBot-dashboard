@@ -461,9 +461,7 @@ def api_send_panel():
     # Reconstruir embed y botón (simplificado)
         embed = discord.Embed(
         title="<:moderacion:1483506627649994812> ModdyBot — Verificación",
-        description="Bienvenido al sistema de protección avanzada de **ModdyBot**.
-
-Pulsa el botón para verificarte.",
+        description="Bienvenido al sistema de protección avanzada de **ModdyBot**.Pulsa el botón para verificarte.",
         color=discord.Color(0x0A3D62)
     )
     embed.set_image(url="https://raw.githubusercontent.com/lildrakk/ModdyBot-web/eb6b1cb04336b0929a83cacad3b6834d11cedf8c/standard-3.gif")
