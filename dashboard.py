@@ -8,8 +8,9 @@ import secrets
 from functools import wraps
 
 # ================= CONFIGURACIÓN =================
-TOKEN = os.getenv("DISCORD_TOKEN")  # Pon tu token aquí si no usas variables de entorno
-WEB_PASSWORD = "admin123"  # CAMBIA ESTO por tu contraseña segura
+TOKEN = os.getenv("DISCORD_TOKEN")
+PORT = int(os.environ.get("PORT", 5000))  # <-- AÑADIDO (FALTABA)
+WEB_PASSWORD = "admin123"
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 FILES = {
@@ -54,7 +55,7 @@ def save_json(key, data):
     except:
         return False
 
-# ================= DECORADOR DE SEGURIDAD =================
+# ================= DECORADOR =================
 def login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
@@ -63,7 +64,7 @@ def login_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
-# ================= HTML DE LA DASHBOARD =================
+# ================= HTML =================
 HTML_DASHBOARD = f"""
 <!DOCTYPE html>
 <html lang="es">
@@ -77,20 +78,16 @@ HTML_DASHBOARD = f"""
         .navbar {{ background: var(--card); padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--accent); }}
         .navbar h1 {{ margin: 0; font-size: 1.5rem; color: var(--accent); }}
         .container {{ max-width: 1200px; margin: 30px auto; padding: 0 20px; }}
-        
         .server-selector {{ background: var(--card); padding: 20px; border-radius: 10px; margin-bottom: 30px; border: 1px solid var(--accent); display: flex; gap: 15px; align-items: center; }}
         .server-selector select {{ padding: 10px; border-radius: 6px; border: 1px solid var(--accent); background: var(--bg); color: var(--text); font-size: 1rem; min-width: 300px; }}
-        
         .stats-grid {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 40px; }}
         .stat-card {{ background: var(--card); padding: 20px; border-radius: 10px; text-align: center; border: 1px solid var(--accent); }}
         .stat-card h3 {{ margin: 0; font-size: 2.5rem; color: var(--accent); }}
-        
         .module {{ background: var(--card); border-radius: 12px; margin-bottom: 30px; overflow: hidden; border: 1px solid var(--accent); }}
         .module-header {{ background: rgba(0,0,0,0.2); padding: 20px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }}
         .module-header h2 {{ margin: 0; color: var(--accent); }}
         .module-content {{ padding: 25px; display: none; }}
         .module.active .module-content {{ display: block; }}
-        
         .form-group {{ margin-bottom: 20px; }}
         .form-group label {{ display: block; margin-bottom: 8px; font-weight: bold; color: var(--accent); }}
         .form-control {{ width: 100%; padding: 10px; border-radius: 6px; border: 1px solid var(--accent); background: var(--bg); color: var(--text); font-size: 1rem; }}
@@ -100,14 +97,11 @@ HTML_DASHBOARD = f"""
         .slider:before {{ position: absolute; content: ""; height: 26px; width: 26px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }}
         input:checked + .slider {{ background-color: var(--accent); }}
         input:checked + .slider:before {{ transform: translateX(26px); }}
-        
         .btn {{ background: var(--accent); color: white; border: none; padding: 12px 24px; border-radius: 6px; cursor: pointer; font-size: 1rem; font-weight: bold; transition: transform 0.2s; }}
         .btn:hover {{ transform: scale(1.05); }}
         .btn-secondary {{ background: #5865F2; }}
-        
         .panel-list {{ list-style: none; padding: 0; }}
         .panel-item {{ background: rgba(0,0,0,0.2); padding: 15px; margin-bottom: 10px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; }}
-        
         footer {{ text-align: center; margin-top: 60px; padding: 20px; opacity: 0.5; }}
         .alert {{ padding: 15px; border-radius: 6px; margin-bottom: 20px; display: none; }}
         .alert-success {{ background: #43b581; color: white; }}
@@ -119,24 +113,17 @@ HTML_DASHBOARD = f"""
         <h1>🛡️ ModdyBot Dashboard</h1>
         <a href="/logout" class="btn btn-secondary" style="text-decoration:none; font-size:0.9rem;">Cerrar Sesión</a>
     </div>
-
     <div class="container">
-        <!-- Selector de Servidor -->
         <div class="server-selector">
             <label for="guild-select" style="font-weight:bold; color:var(--accent);">Servidor:</label>
             <select id="guild-select" class="form-control" onchange="loadConfig()"></select>
         </div>
-
-        <!-- Estadísticas -->
         <div class="stats-grid">
             <div class="stat-card"><h3 id="stat-guilds">0</h3><p>Servidores</p></div>
             <div class="stat-card"><h3 id="stat-users">0</h3><p>Usuarios</p></div>
             <div class="stat-card"><h3 id="stat-latency">0</h3><p>Latencia (ms)</p></div>
         </div>
-
-        <!-- Alertas -->
         <div id="alert-box" class="alert"></div>
-
         <!-- 1. ANTI-ALTS -->
         <div class="module">
             <div class="module-header" onclick="toggleModule(this)"><h2>👶 Anti-Alts</h2><span>▼</span></div>
@@ -146,7 +133,6 @@ HTML_DASHBOARD = f"""
                 <button class="btn" onclick="saveConfig('antialts')">Guardar Cambios</button>
             </div>
         </div>
-
         <!-- 2. ANTI-BOTS -->
         <div class="module">
             <div class="module-header" onclick="toggleModule(this)"><h2>🤖 Anti-Bots</h2><span>▼</span></div>
@@ -156,7 +142,6 @@ HTML_DASHBOARD = f"""
                 <button class="btn" onclick="saveConfig('antibots')">Guardar Cambios</button>
             </div>
         </div>
-
         <!-- 3. ANTI-FLOOD -->
         <div class="module">
             <div class="module-header" onclick="toggleModule(this)"><h2>🌊 Anti-Flood</h2><span>▼</span></div>
@@ -169,7 +154,6 @@ HTML_DASHBOARD = f"""
                 <button class="btn" onclick="saveConfig('antiflood')">Guardar Cambios</button>
             </div>
         </div>
-
         <!-- 4. ANTI-LINKS -->
         <div class="module">
             <div class="module-header" onclick="toggleModule(this)"><h2>🔗 Anti-Links</h2><span>▼</span></div>
@@ -181,7 +165,6 @@ HTML_DASHBOARD = f"""
                 <button class="btn" onclick="saveConfig('antilinks')">Guardar Cambios</button>
             </div>
         </div>
-
         <!-- 5. ULTRA LOGS -->
         <div class="module">
             <div class="module-header" onclick="toggleModule(this)"><h2>📝 Ultra Logs</h2><span>▼</span></div>
@@ -200,7 +183,6 @@ HTML_DASHBOARD = f"""
                 <button class="btn" onclick="saveConfig('logs')">Guardar Cambios</button>
             </div>
         </div>
-
         <!-- 6. VERIFICACIÓN -->
         <div class="module">
             <div class="module-header" onclick="toggleModule(this)"><h2>✅ Verificación</h2><span>▼</span></div>
@@ -215,15 +197,11 @@ HTML_DASHBOARD = f"""
             </div>
         </div>
     </div>
-
     <footer>ModdyBot Dashboard • Local</footer>
-
     <script>
         let currentGuildId = null;
         let allChannels = [];
-
         function toggleModule(header) {{ header.parentElement.classList.toggle('active'); }}
-
         function showAlert(msg, type) {{
             const box = document.getElementById('alert-box');
             box.className = 'alert alert-' + type;
@@ -231,11 +209,9 @@ HTML_DASHBOARD = f"""
             box.style.display = 'block';
             setTimeout(() => box.style.display = 'none', 3000);
         }}
-
         async function loadDashboard() {{
             const res = await fetch('/api/init');
             const data = await res.json();
-            
             const select = document.getElementById('guild-select');
             select.innerHTML = '';
             data.guilds.forEach(g => {{
@@ -244,22 +220,18 @@ HTML_DASHBOARD = f"""
                 opt.innerText = g.name;
                 select.appendChild(opt);
             }});
-            
             if (data.guilds.length > 0) {{
                 currentGuildId = data.guilds[0].id;
                 loadConfig();
             }}
-            
             document.getElementById('stat-guilds').innerText = data.guilds.length;
             document.getElementById('stat-users').innerText = data.total_users;
             document.getElementById('stat-latency').innerText = data.latency;
         }}
-
         async function loadConfig() {{
             currentGuildId = document.getElementById('guild-select').value;
             const res = await fetch('/api/config?guild=' + currentGuildId);
             const data = await res.json();
-            
             allChannels = data.channels || [];
             const channelSelects = document.querySelectorAll('.channel-select');
             channelSelects.forEach(sel => {{
@@ -271,33 +243,23 @@ HTML_DASHBOARD = f"""
                     sel.appendChild(opt);
                 }});
             }});
-
-            // Anti-Alts
             const aa = data.antialts[currentGuildId] || {{}};
             document.getElementById('antialts-days').value = aa.dias || 7;
             document.getElementById('antialts-logs').value = aa.logs || '';
-
-            // Anti-Bots
             const ab = data.antibots[currentGuildId] || {{}};
             document.getElementById('antibots-enabled').checked = ab.enabled || false;
             document.getElementById('antibots-logs').value = ab.log_channel || '';
-
-            // Anti-Flood
             const af = data.antiflood[currentGuildId] || {{}};
             document.getElementById('antiflood-enabled').checked = af.enabled || false;
             document.getElementById('antiflood-level').value = af.nivel || 'medio';
             document.getElementById('antiflood-action').value = af.accion || 'mute';
             document.getElementById('antiflood-mute-time').value = af.mute_time || 600;
             document.getElementById('antiflood-logs').value = af.log_channel || '';
-
-            // Anti-Links
             const al = data.antilinks[currentGuildId] || {{}};
             document.getElementById('antilinks-enabled').checked = al.enabled || false;
             document.getElementById('antilinks-action').value = al.accion || 'mute';
             document.getElementById('antilinks-allow-invites').checked = al.allow_invites || false;
             document.getElementById('antilinks-logs').value = al.log_channel || '';
-
-            // Logs
             const lg = data.logs[currentGuildId] || {{}};
             document.getElementById('logs-enabled').checked = lg.enabled || false;
             document.getElementById('logs-channel').value = lg.channel || '';
@@ -307,14 +269,11 @@ HTML_DASHBOARD = f"""
             document.getElementById('logs-canales').checked = cats.canales !== false;
             document.getElementById('logs-mensajes').checked = cats.mensajes !== false;
             document.getElementById('logs-servidor').checked = cats.servidor !== false;
-
-            // Verificación
             const ver = data.verification[currentGuildId] || {{}};
             const list = document.getElementById('verification-list');
             const panelSelect = document.getElementById('verify-panel-select');
             list.innerHTML = '';
             panelSelect.innerHTML = '<option value="">-- Seleccionar --</option>';
-            
             if (Object.keys(ver).length === 0) {{
                 list.innerHTML = '<li>No hay paneles creados. Usa /verificacion en Discord.</li>';
             }} else {{
@@ -324,7 +283,6 @@ HTML_DASHBOARD = f"""
                 }}
             }}
         }}
-
         async function saveConfig(module) {{
             let payload = {{ guild_id: currentGuildId, module: module }};
             if (module === 'antialts') {{
@@ -338,22 +296,18 @@ HTML_DASHBOARD = f"""
             }} else if (module === 'logs') {{
                 payload.data = {{ enabled: document.getElementById('logs-enabled').checked, channel: document.getElementById('logs-channel').value, categories: {{ joins: document.getElementById('logs-joins').checked, roles: document.getElementById('logs-roles').checked, canales: document.getElementById('logs-canales').checked, mensajes: document.getElementById('logs-mensajes').checked, servidor: document.getElementById('logs-servidor').checked }} }};
             }}
-            
             const res = await fetch('/api/save', {{ method: 'POST', headers: {{'Content-Type': 'application/json'}}, body: JSON.stringify(payload) }});
             const result = await res.json();
             showAlert(result.message, result.success ? 'success' : 'error');
         }}
-
         async function sendVerificationPanel() {{
             const panelId = document.getElementById('verify-panel-select').value;
             const channelId = document.getElementById('verify-channel-dest').value;
             if (!panelId || !channelId) return showAlert('Selecciona panel y canal', 'error');
-            
             const res = await fetch('/api/send-panel', {{ method: 'POST', headers: {{'Content-Type': 'application/json'}}, body: JSON.stringify({{ guild_id: currentGuildId, panel_id: panelId, channel_id: channelId }}) }});
             const result = await res.json();
             showAlert(result.message, result.success ? 'success' : 'error');
         }}
-
         document.getElementById('guild-select').addEventListener('change', loadConfig);
         window.onload = loadDashboard;
     </script>
@@ -405,13 +359,11 @@ def api_config():
     data = {{}}
     for key in FILES.keys():
         data[key] = load_json(key)
-    
     guild = bot.get_guild(int(guild_id))
     channels = []
     if guild:
         for ch in guild.text_channels:
             channels.append({{"id": str(ch.id), "name": ch.name}})
-    
     return jsonify({{**data, "channels": channels}})
 
 @app.route('/api/save', methods=['POST'])
@@ -421,9 +373,7 @@ def api_save():
     module = req.get('module')
     guild_id = req.get('guild_id')
     new_data = req.get('data', {{}})
-    
     current = load_json(module)
-    
     if module == 'antialts':
         current[guild_id] = new_data
     elif module == 'antibots':
@@ -438,7 +388,6 @@ def api_save():
     elif module == 'logs':
         if guild_id not in current: current[guild_id] = {{}}
         current[guild_id].update(new_data)
-    
     success = save_json(module, current)
     return jsonify({{"success": success, "message": "Guardado correctamente" if success else "Error al guardar"}})
 
@@ -449,19 +398,17 @@ def api_send_panel():
     guild_id = req.get('guild_id')
     panel_id = req.get('panel_id')
     channel_id = req.get('channel_id')
-    
     guild = bot.get_guild(int(guild_id))
     if not guild:
         return jsonify({{"success": False, "message": "Servidor no encontrado"}})
-    
     channel = guild.get_channel(int(channel_id))
     if not channel:
         return jsonify({{"success": False, "message": "Canal no encontrado"}})
     
-    # Reconstruir embed y botón (simplificado)
-        embed = discord.Embed(
+    # INDENTACIÓN ARREGLADA AQUÍ
+    embed = discord.Embed(
         title="<:moderacion:1483506627649994812> ModdyBot — Verificación",
-        description="Bienvenido al sistema de protección avanzada de **ModdyBot**.Pulsa el botón para verificarte.",
+        description="Bienvenido al sistema de protección avanzada de **ModdyBot**. Pulsa el botón para verificarte.",
         color=discord.Color(0x0A3D62)
     )
     embed.set_image(url="https://raw.githubusercontent.com/lildrakk/ModdyBot-web/eb6b1cb04336b0929a83cacad3b6834d11cedf8c/standard-3.gif")
@@ -474,9 +421,9 @@ def api_send_panel():
     try:
         import asyncio
         threading.Thread(target=lambda: asyncio.run_coroutine_threadsafe(channel.send(embed=embed, view=VerifyButton()), bot.loop)).start()
-        return jsonify({"success": True, "message": "Panel enviado correctamente"})
+        return jsonify({{"success": True, "message": "Panel enviado correctamente"}})
     except Exception as e:
-        return jsonify({"success": False, "message": f"Error: {str(e)}"})
+        return jsonify({{"success": False, "message": f"Error: {str(e)}"}})
 
 # ================= RUN =================
 def run_flask():
@@ -490,4 +437,4 @@ async def on_ready():
 
 if __name__ == "__main__":
     threading.Thread(target=run_flask, daemon=True).start()
-    bot.run(DISCORD_TOKEN)
+    bot.run(TOKEN)  # <-- ARREGLADO (ANTES DECÍA DISCORD_TOKEN) 
