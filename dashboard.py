@@ -459,9 +459,9 @@ def api_send_panel():
         return jsonify({{"success": False, "message": "Canal no encontrado"}})
     
     # Reconstruir embed y botón (simplificado)
-    embed = discord.Embed(
+        embed = discord.Embed(
         title="<:moderacion:1483506627649994812> ModdyBot — Verificación",
-        description="Bienvenido al sistema de protección avanzada de **ModdyBot**".
+        description="Bienvenido al sistema de protección avanzada de **ModdyBot**.
 
 Pulsa el botón para verificarte.",
         color=discord.Color(0x0A3D62)
@@ -474,10 +474,11 @@ Pulsa el botón para verificarte.",
             self.add_item(discord.ui.Button(label="Verificarme", emoji="✅", style=discord.ButtonStyle.success, custom_id=f"verify_{panel_id}"))
     
     try:
+        import asyncio
         threading.Thread(target=lambda: asyncio.run_coroutine_threadsafe(channel.send(embed=embed, view=VerifyButton()), bot.loop)).start()
-        return jsonify({{"success": True, "message": "Panel enviado correctamente"}})
+        return jsonify({"success": True, "message": "Panel enviado correctamente"})
     except Exception as e:
-        return jsonify({{"success": False, "message": f"Error: {{str(e)}}"}})
+        return jsonify({"success": False, "message": f"Error: {str(e)}"})
 
 # ================= RUN =================
 def run_flask():
