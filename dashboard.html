@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ModdyBot — Panel</title>
+  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet"/>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{
+      --bg:#020408;--bg2:#060c14;--bg3:#0a1220;
+      --blue:#1a6fff;--blue2:#4d9fff;--cyan:#00d4ff;
+      --green:#00ff88;--red:#ff3366;--yellow:#ffcc00;
+      --glow:rgba(26,111,255,0.4);
+      --text:#e8f4ff;--muted:#4a6a8a;--muted2:#1a2a3a;
+      --border:rgba(26,111,255,0.2);--border2:rgba(26,111,255,0.1);
+      --font:'Rajdhani',sans-serif;--mono:'Share Tech Mono',monospace;
+    }
+    body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;display:flex;overflow-x:hidden}
+    body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(26,111,255,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(26,111,255,0.03) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;z-index:0}
+
+    /* SIDEBAR */
+    .sidebar{width:255px;min-height:100vh;background:linear-gradient(180deg,rgba(6,12,20,0.99),rgba(2,4,8,0.99));border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;left:0;top:0;bottom:0;z-index:100;transition:transform .3s}
+    .sb-logo{padding:20px 16px;border-bottom:1px solid var(--border2);display:flex;align-items:center;gap:10px}
+    .sb-logo img{width:40px;height:40px;border-radius:50%;border:2px solid rgba(26,111,255,0.4);box-shadow:0 0 12px var(--glow)}
+    .sb-logo .lf{width:40px;height:40px;border-radius:50%;border:2px solid rgba(26,111,255,0.4);background:rgba(26,111,255,0.15);display:none;align-items:center;justify-content:center;font-size:16px;font-weight:900;color:#fff;box-shadow:0 0 12px var(--glow)}
+    .sb-logo-text .name{font-size:17px;font-weight:700;letter-spacing:2px;background:linear-gradient(135deg,#fff,var(--blue2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+    .sb-logo-text .ver{font-family:var(--mono);font-size:9px;color:var(--muted);letter-spacing:1px}
+
+    /* SERVER SELECT */
+    .srv-section{padding:14px;border-bottom:1px solid var(--border2)}
+    .srv-label{font-family:var(--mono);font-size:9px;color:var(--muted);letter-spacing:2px;margin-bottom:7px;text-transform:uppercase}
+    .srv-select{width:100%;padding:9px 30px 9px 11px;background:rgba(26,111,255,0.08);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--font);font-size:13px;font-weight:600;cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='%234d9fff'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center}
+    .srv-select:focus{outline:none;border-color:var(--blue)}
+    .srv-select option{background:#0a1220}
+
+    /* NAV */
+    .nav{padding:10px 0;flex:1;overflow-y:auto}
+    .nav-sec{padding:8px 14px 3px;font-family:var(--mono);font-size:9px;color:var(--muted);letter-spacing:2px;text-transform:uppercase}
+    .nav-item{display:flex;align-items:center;gap:9px;padding:9px 18px;margin:2px 7px;border-radius:7px;cursor:pointer;font-size:14px;font-weight:600;letter-spacing:.4px;transition:all .2s;color:#7a9cbf;position:relative}
+    .nav-item:hover{background:rgba(26,111,255,0.08);color:var(--text)}
+    .nav-item.active{background:rgba(26,111,255,0.14);color:var(--blue2);border:1px solid rgba(26,111,255,0.22)}
+    .nav-item.active::before{content:'';position:absolute;left:-7px;top:50%;transform:translateY(-50%);width:3px;height:55%;background:var(--blue);border-radius:2px;box-shadow:0 0 8px var(--blue)}
+    .nav-item .ni{font-size:16px;width:20px;text-align:center;flex-shrink:0}
+    .nav-item .dot{width:7px;height:7px;border-radius:50%;margin-left:auto;flex-shrink:0}
+    .dot.on{background:var(--green);box-shadow:0 0 6px var(--green)}
+    .dot.off{background:var(--muted2)}
+    .nav-item .badge{margin-left:auto;font-family:var(--mono);font-size:9px;padding:2px 6px;border-radius:4px;background:rgba(255,204,0,0.15);color:var(--yellow)}
+
+    /* SIDEBAR FOOTER */
+    .sb-foot{padding:14px;border-top:1px solid var(--border2)}
+    .user-card{display:flex;align-items:center;gap:9px;padding:9px;background:rgba(26,111,255,0.06);border:1px solid var(--border2);border-radius:8px}
+    .user-av{width:34px;height:34px;border-radius:50%;border:2px solid rgba(26,111,255,0.3)}
+    .user-info{flex:1;min-width:0}
+    .user-name{font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .user-role{font-family:var(--mono);font-size:9px;color:var(--cyan)}
+    .logout{padding:6px 8px;background:rgba(255,51,102,0.1);border:1px solid rgba(255,51,102,0.2);border-radius:6px;color:#ff3366;cursor:pointer;font-size:11px;transition:all .2s;text-decoration:none;white-space:nowrap}
+    .logout:hover{background:rgba(255,51,102,0.2)}
+
+    /* MAIN */
+    .main{margin-left:255px;flex:1;padding:24px;position:relative;z-index:1;min-height:100vh}
+
+    /* TOPBAR */
+    .topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px}
+    .page-title{font-size:26px;font-weight:700;letter-spacing:2px;text-transform:uppercase;background:linear-gradient(135deg,#fff,var(--blue2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+    .breadcrumb{font-family:var(--mono);font-size:10px;color:var(--muted);margin-top:2px}
+
+    /* STATS */
+    .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px}
+    .stat{padding:18px;background:rgba(6,12,20,0.8);border:1px solid var(--border);border-radius:11px;position:relative;overflow:hidden}
+    .stat::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--blue),var(--cyan))}
+    .stat-label{font-family:var(--mono);font-size:9px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-bottom:7px}
+    .stat-val{font-size:26px;font-weight:700;background:linear-gradient(135deg,#fff,var(--blue2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+    .stat-sub{font-size:11px;color:var(--muted);margin-top:3px}
+
+    /* PAGES */
+    .page{display:none}
+    .page.active{display:block}
+
+    /* CARD */
+    .card{background:rgba(6,12,20,0.8);border:1px solid var(--border);border-radius:12px;margin-bottom:18px;overflow:hidden}
+    .card-body{padding:22px}
+
+    /* FORM */
+    .fg{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+    .fg3{grid-template-columns:1fr 1fr 1fr}
+    .fg1{grid-template-columns:1fr}
+    .field{display:flex;flex-direction:column;gap:5px}
+    .field label{font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:1px;text-transform:uppercase}
+    .field input,.field select{padding:9px 12px;background:rgba(26,111,255,0.06);border:1px solid var(--border);border-radius:7px;color:var(--text);font-family:var(--font);font-size:13px;transition:all .2s}
+    .field input:focus,.field select:focus{outline:none;border-color:var(--blue);background:rgba(26,111,255,0.1);box-shadow:0 0 0 2px rgba(26,111,255,0.12)}
+    .field select option{background:#0a1220}
+    .field .hint{font-size:11px;color:var(--muted)}
+    .sec-title{font-family:var(--mono);font-size:10px;color:var(--cyan);letter-spacing:2px;text-transform:uppercase;margin:18px 0 10px;padding-bottom:5px;border-bottom:1px solid var(--border2)}
+
+    /* TOGGLE */
+    .toggle-row{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:rgba(26,111,255,0.05);border:1px solid var(--border2);border-radius:8px;margin-bottom:16px}
+    .toggle-row label{font-size:15px;font-weight:600}
+    .toggle{position:relative;width:46px;height:25px;flex-shrink:0}
+    .toggle input{opacity:0;width:0;height:0;position:absolute}
+    .tsl{position:absolute;inset:0;cursor:pointer;background:var(--muted2);border-radius:13px;transition:.3s}
+    .tsl::before{content:'';position:absolute;width:19px;height:19px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:.3s}
+    .toggle input:checked+.tsl{background:var(--blue);box-shadow:0 0 10px rgba(26,111,255,0.5)}
+    .toggle input:checked+.tsl::before{transform:translateX(21px)}
+
+    /* SAVE BTN */
+    .save-btn{display:inline-flex;align-items:center;gap:7px;padding:9px 22px;margin-top:18px;background:linear-gradient(135deg,#1a6fff,#0050cc);border:1px solid rgba(26,111,255,0.4);border-radius:7px;color:#fff;font-family:var(--font);font-size:13px;font-weight:700;letter-spacing:1px;cursor:pointer;transition:all .25s}
+    .save-btn:hover{transform:translateY(-1px);box-shadow:0 0 20px rgba(26,111,255,0.4)}
+
+    /* TAGS */
+    .tag-list{display:flex;flex-wrap:wrap;gap:7px;min-height:32px}
+    .tag{display:inline-flex;align-items:center;gap:5px;padding:4px 9px;background:rgba(26,111,255,0.12);border:1px solid rgba(26,111,255,0.25);border-radius:5px;font-family:var(--mono);font-size:11px;color:var(--blue2)}
+    .tag .rm{cursor:pointer;color:var(--red);font-size:13px;line-height:1}
+    .tag-row{display:flex;gap:7px;margin-top:7px}
+    .tag-row input{flex:1}
+    .tag-add{padding:9px 14px;background:rgba(26,111,255,0.1);border:1px solid var(--border);border-radius:7px;color:var(--blue2);cursor:pointer;font-size:16px;transition:all .2s}
+    .tag-add:hover{background:rgba(26,111,255,0.2)}
+
+    /* CATS */
+    .cat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+    .cat-item{display:flex;align-items:center;gap:8px;padding:10px 12px;background:rgba(26,111,255,0.06);border:1px solid var(--border2);border-radius:7px;cursor:pointer;font-size:13px;font-weight:600}
+    .cat-item input{accent-color:var(--blue);cursor:pointer}
+
+    /* BL TABLE */
+    .bl-table{width:100%;border-collapse:collapse}
+    .bl-table th{text-align:left;font-family:var(--mono);font-size:9px;color:var(--muted);letter-spacing:1px;padding:7px 10px;border-bottom:1px solid var(--border2)}
+    .bl-table td{padding:9px 10px;border-bottom:1px solid var(--border2);font-size:13px}
+    .bl-table tr:last-child td{border-bottom:none}
+    .bl-table tr:hover td{background:rgba(26,111,255,0.03)}
+    .action-badge{padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;background:rgba(255,51,102,0.1);color:var(--red)}
+
+    /* PANEL CARDS */
+    .panel-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px}
+    .panel-card{background:rgba(6,12,20,0.8);border:1px solid var(--border);border-radius:10px;padding:16px;display:flex;align-items:center;gap:12px;cursor:pointer;transition:all .2s}
+    .panel-card:hover{border-color:rgba(26,111,255,0.4);background:rgba(26,111,255,0.05)}
+    .panel-card .picon{font-size:26px}
+    .panel-card .ptitle{font-size:15px;font-weight:700}
+    .panel-card .pstatus{font-size:11px;font-family:var(--mono);margin-top:2px}
+    .pstatus.on{color:var(--green)}
+    .pstatus.off{color:var(--muted)}
+
+    /* REVOKE BTN */
+    .revoke-btn{padding:5px 12px;background:rgba(255,51,102,0.1);border:1px solid rgba(255,51,102,0.3);border-radius:5px;color:#ff3366;cursor:pointer;font-size:11px;font-family:var(--font);font-weight:600;transition:all .2s}
+    .revoke-btn:hover{background:rgba(255,51,102,0.2)}
+
+    /* TOAST */
+    .toast{position:fixed;bottom:22px;right:22px;z-index:9999;padding:12px 18px;border-radius:9px;font-size:13px;font-weight:600;display:flex;align-items:center;gap:9px;transform:translateX(200px);opacity:0;transition:all .3s cubic-bezier(.34,1.56,.64,1);max-width:300px}
+    .toast.show{transform:translateX(0);opacity:1}
+    .toast.success{background:rgba(0,255,136,0.1);border:1px solid rgba(0,255,136,0.3);color:var(--green)}
+    .toast.error{background:rgba(255,51,102,0.1);border:1px solid rgba(255,51,102,0.3);color:var(--red)}
+
+    /* LOADING / NO SERVER */
+    .loading{display:flex;align-items:center;justify-content:center;gap:8px;padding:40px;color:var(--muted);font-family:var(--mono);font-size:12px}
+    .spinner{width:18px;height:18px;border:2px solid var(--border);border-top-color:var(--blue);border-radius:50%;animation:spin .8s linear infinite}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .no-server{text-align:center;padding:50px 20px;color:var(--muted)}
+    .no-server .ns-icon{font-size:44px;margin-bottom:14px}
+    .no-server p{font-size:14px;line-height:1.6}
+
+    /* INFO BOX */
+    .info-box{padding:12px 16px;background:rgba(26,111,255,0.08);border:1px solid rgba(26,111,255,0.2);border-radius:8px;font-size:13px;color:#7aaccc;line-height:1.6;margin-bottom:16px}
+    .info-box code{color:var(--cyan);background:rgba(0,212,255,0.1);padding:1px 5px;border-radius:3px;font-family:var(--mono)}
+
+    /* MOBILE */
+    .mob-toggle{display:none;position:fixed;top:14px;left:14px;z-index:200;padding:9px;background:rgba(6,12,20,0.9);border:1px solid var(--border);border-radius:7px;cursor:pointer;color:var(--text);font-size:18px}
+    @media(max-width:768px){
+      .sidebar{transform:translateX(-100%)}
+      .sidebar.open{transform:translateX(0)}
+      .main{margin-left:0;padding:14px;padding-top:58px}
+      .stats{grid-template-columns:1fr 1fr}
+      .fg{grid-template-columns:1fr}
+      .fg3{grid-template-columns:1fr}
+      .cat-grid{grid-template-columns:1fr 1fr}
+      .mob-toggle{display:flex}
+    }
+  </style>
+</head>
+<body>
+<button class="mob-toggle" id="mobToggle">☰</button>
+
+<!-- SIDEBAR -->
+<aside class="sidebar" id="sidebar">
+  <div class="sb-logo">
+    <img src="/img/logo.png" alt="MD" id="sbLogo" onerror="this.style.display='none';document.getElementById('sbLf').style.display='flex'"/>
+    <div class="lf" id="sbLf">MD</div>
+    <div class="sb-logo-text">
+      <div class="name">MODDYBOT</div>
+      <div class="ver">// DASHBOARD v2.0</div>
+    </div>
+  </div>
+
+  <div class="srv-section">
+    <div class="srv-label">Servidor activo</div>
+    <select class="srv-select" id="srvSelect">
+      <option value="">— Selecciona un servidor —</option>
+    </select>
+  </div>
+
+  <nav class="nav">
+    <div class="nav-sec">General</div>
+    <div class="nav-item active" data-page="overview"><span class="ni">📊</span> Vista general</div>
+
+    <div class="nav-sec">Protección</div>
+    <div class="nav-item" data-page="antilinks"><span class="ni">🔗</span> Anti-Links <span class="dot off" id="d-antilinks"></span></div>
+    <div class="nav-item" data-page="antiflood"><span class="ni">🌊</span> Anti-Flood <span class="dot off" id="d-antiflood"></span></div>
+    <div class="nav-item" data-page="antiping"><span class="ni">🔔</span> Anti-Ping <span class="dot off" id="d-antiping"></span></div>
+    <div class="nav-item" data-page="antibots"><span class="ni">🤖</span> Anti-Bots <span class="dot off" id="d-antibots"></span></div>
+    <div class="nav-item" data-page="antialts"><span class="ni">👴</span> Anti-Alts</div>
+
+    <div class="nav-sec">Configuración</div>
+    <div class="nav-item" data-page="logs"><span class="ni">📋</span> Logs <span class="dot off" id="d-logs"></span></div>
+    <div class="nav-item" data-page="verificacion"><span class="ni">✅</span> Verificación</div>
+    <div class="nav-item" data-page="welcomedm"><span class="ni">📨</span> Welcome DM <span class="dot off" id="d-welcomedm"></span></div>
+    <div class="nav-item" data-page="blacklist"><span class="ni">🚫</span> Blacklist</div>
+  </nav>
+
+  <div class="sb-foot">
+    <div class="user-card">
+      <img class="user-av" id="userAv" src="" alt=""/>
+      <div class="user-info">
+        <div class="user-name" id="userName">...</div>
+        <div class="user-role" id="userRole">// USER</div>
+      </div>
+      <a href="/auth/logout" class="logout">Salir</a>
+    </div>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<main class="main">
+
+  <!-- OVERVIEW -->
+  <div class="page active" id="page-overview">
+    <div class="topbar"><div>
+      <div class="page-title">Vista General</div>
+      <div class="breadcrumb">// dashboard → overview</div>
+    </div></div>
+    <div class="stats">
+      <div class="stat"><div class="stat-label">Módulos Activos</div><div class="stat-val" id="sActive">—</div><div class="stat-sub">de 6 módulos</div></div>
+      <div class="stat"><div class="stat-label">Servidor</div><div class="stat-val" style="font-size:16px" id="sServer">—</div><div class="stat-sub">seleccionado</div></div>
+      <div class="stat"><div class="stat-label">Blacklist</div><div class="stat-val" id="sBL">—</div><div class="stat-sub">usuarios bloqueados</div></div>
+      <div class="stat"><div class="stat-label">Tus Servers</div><div class="stat-val" id="sGuilds">—</div><div class="stat-sub">donde eres admin</div></div>
+    </div>
+    <div id="overviewCards"><div class="no-server"><div class="ns-icon">🖥️</div><p>Selecciona un servidor para ver su configuración</p></div></div>
+  </div>
+
+  <!-- ANTILINKS -->
+  <div class="page" id="page-antilinks">
+    <div class="topbar"><div><div class="page-title">Anti-Links</div><div class="breadcrumb">// protection → antilinks</div></div></div>
+    <div class="card"><div class="card-body" id="b-antilinks"><div class="loading"><div class="spinner"></div> Cargando...</div></div></div>
+  </div>
+
+  <!-- ANTIFLOOD -->
+  <div class="page" id="page-antiflood">
+    <div class="topbar"><div><div class="page-title">Anti-Flood</div><div class="breadcrumb">// protection → antiflood</div></div></div>
+    <div class="card"><div class="card-body" id="b-antiflood"><div class="loading"><div class="spinner"></div> Cargando...</div></div></div>
+  </div>
+
+  <!-- ANTIPING -->
+  <div class="page" id="page-antiping">
+    <div class="topbar"><div><div class="page-title">Anti-Ping</div><div class="breadcrumb">// protection → antiping</div></div></div>
+    <div class="card"><div class="card-body" id="b-antiping"><div class="loading"><div class="spinner"></div> Cargando...</div></div></div>
+  </div>
+
+  <!-- ANTIBOTS -->
+  <div class="page" id="page-antibots">
+    <div class="topbar"><div><div class="page-title">Anti-Bots</div><div class="breadcrumb">// protection → antibots</div></div></div>
+    <div class="card"><div class="card-body" id="b-antibots"><div class="loading"><div class="spinner"></div> Cargando...</div></div></div>
+  </div>
+
+  <!-- ANTIALTS -->
+  <div class="page" id="page-antialts">
+    <div class="topbar"><div><div class="page-title">Anti-Alts</div><div class="breadcrumb">// protection → antialts</div></div></div>
+    <div class="card"><div class="card-body" id="b-antialts"><div class="loading"><div class="spinner"></div> Cargando...</div></div></div>
+  </div>
+
+  <!-- LOGS -->
+  <div class="page" id="page-logs">
+    <div class="topbar"><div><div class="page-title">Sistema de Logs</div><div class="breadcrumb">// config → logs</div></div></div>
+    <div class="card"><div class="card-body" id="b-logs"><div class="loading"><div class="spinner"></div> Cargando...</div></div></div>
+  </div>
+
+  <!-- VERIFICACION -->
+  <div class="page" id="page-verificacion">
+    <div class="topbar"><div><div class="page-title">Verificación</div><div class="breadcrumb">// config → verificacion</div></div></div>
+    <div class="card"><div class="card-body" id="b-verificacion"><div class="loading"><div class="spinner"></div> Cargando...</div></div></div>
+  </div>
+
+  <!-- WELCOMEDM -->
+  <div class="page" id="page-welcomedm">
+    <div class="topbar"><div><div class="page-title">Welcome DM</div><div class="breadcrumb">// config → welcomedm</div></div></div>
+    <div class="card"><div class="card-body" id="b-welcomedm"><div class="loading"><div class="spinner"></div> Cargando...</div></div></div>
+  </div>
+
+  <!-- BLACKLIST -->
+  <div class="page" id="page-blacklist">
+    <div class="topbar"><div><div class="page-title">Blacklist del Servidor</div><div class="breadcrumb">// config → blacklist</div></div></div>
+    <div class="card"><div class="card-body" id="b-blacklist"><div class="loading"><div class="spinner"></div> Cargando...</div></div></div>
+  </div>
+
+</main>
+<div class="toast" id="toast"></div>
+
+<script>
+let me = null, guildId = null, page = 'overview';
+
+async function init() {
+  try {
+    const r = await fetch('/api/me');
+    if (!r.ok) return location.href = '/';
+    me = await r.json();
+    document.getElementById('userAv').src = me.avatar
+      ? `https://cdn.discordapp.com/avatars/${me.id}/${me.avatar}.png`
+      : `https://cdn.discordapp.com/embed/avatars/0.png`;
+    document.getElementById('userName').textContent = me.username;
+    document.getElementById('userRole').textContent = me.isOwner ? '// OWNER' : '// ADMIN';
+    document.getElementById('sGuilds').textContent = me.guilds?.length || 0;
+
+    const sel = document.getElementById('srvSelect');
+    (me.guilds || []).forEach(g => {
+      const o = document.createElement('option');
+      o.value = g.id; o.textContent = g.name;
+      sel.appendChild(o);
+    });
+    sel.addEventListener('change', () => {
+      guildId = sel.value || null;
+      const name = sel.options[sel.selectedIndex]?.text || '—';
+      document.getElementById('sServer').textContent = name;
+      if (guildId) loadPage();
+    });
+  } catch { location.href = '/'; }
+}
+
+// NAV
+document.querySelectorAll('.nav-item').forEach(item => {
+  item.addEventListener('click', () => {
+    document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+    item.classList.add('active');
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    page = item.dataset.page;
+    document.getElementById('page-' + page).classList.add('active');
+    if (guildId) loadPage();
+    document.getElementById('sidebar').classList.remove('open');
+  });
+});
+
+document.getElementById('mobToggle').addEventListener('click', () => {
+  document.getElementById('sidebar').classList.toggle('open');
+});
+
+function loadPage() {
+  if (!guildId) return;
+  const map = {
+    overview: loadOverview, antilinks: loadAntilinks, antiflood: loadAntiflood,
+    antiping: loadAntiping, antibots: loadAntibots, antialts: loadAntialts,
+    logs: loadLogs, verificacion: loadVerificacion, welcomedm: loadWelcomeDM, blacklist: loadBlacklist
+  };
+  if (map[page]) map[page]();
+}
+
+// HELPERS
+async function get(url) { const r = await fetch(url); if (!r.ok) throw new Error(r.status); return r.json(); }
+async function post(url, d) { const r = await fetch(url, {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(d)}); if (!r.ok) throw new Error(r.status); return r.json(); }
+async function del(url) { const r = await fetch(url, {method:'DELETE'}); if (!r.ok) throw new Error(r.status); return r.json(); }
+
+function toast(msg, type='success') {
+  const t = document.getElementById('toast');
+  t.textContent = (type==='success'?'✓ ':'✗ ') + msg;
+  t.className = 'toast ' + type + ' show';
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+function noSrv() { return '<div class="no-server"><div class="ns-icon">🖥️</div><p>Selecciona un servidor primero</p></div>'; }
+function loading() { return '<div class="loading"><div class="spinner"></div> Cargando...</div>'; }
+
+function dot(id, enabled) {
+  const el = document.getElementById(id);
+  if (el) el.className = 'dot ' + (enabled ? 'on' : 'off');
+}
+
+function addTag(listId, inputId) {
+  const inp = document.getElementById(inputId);
+  const val = inp.value.trim();
+  if (!val) return;
+  const list = document.getElementById(listId);
+  const s = document.createElement('span');
+  s.className = 'tag';
+  s.innerHTML = `${val}<span class="rm" onclick="rmTag('${listId}','${val}')">×</span>`;
+  list.appendChild(s);
+  inp.value = '';
+}
+function rmTag(listId, val) {
+  document.querySelectorAll(`#${listId} .tag`).forEach(t => {
+    if (t.textContent.replace('×','').trim() === String(val)) t.remove();
+  });
+}
+function getTags(listId) {
+  return [...document.querySelectorAll(`#${listId} .tag`)].map(t => t.textContent.replace('×','').trim()).filter(Boolean);
+}
+function gotoPage(p) {
+  document.querySelectorAll('.nav-item').forEach(i => i.classList.toggle('active', i.dataset.page === p));
+  document.querySelectorAll('.page').forEach(x => x.classList.remove('active'));
+  page = p;
+  document.getElementById('page-' + p).classList.add('active');
+  if (guildId) loadPage();
+}
+
+// ── OVERVIEW ──────────────────────────────────
+async function loadOverview() {
+  const mods = ['antilinks','antiflood','antiping','antibots','logs','welcomedm'];
+  const cfgs = await Promise.all(mods.map(m => get(`/api/config/${m}/${guildId}`).catch(() => ({}))));
+  let active = 0;
+  cfgs.forEach((c, i) => {
+    if (c.enabled) active++;
+    dot('d-' + mods[i], c.enabled);
+  });
+  document.getElementById('sActive').textContent = active;
+  const bl = await get(`/api/config/blacklist/${guildId}`).catch(() => ({users:{}}));
+  document.getElementById('sBL').textContent = Object.keys(bl.users || {}).length;
+  const labels = ['Anti-Links','Anti-Flood','Anti-Ping','Anti-Bots','Logs','Welcome DM'];
+  const icons  = ['🔗','🌊','🔔','🤖','📋','📨'];
+  document.getElementById('overviewCards').innerHTML = `
+    <div class="panel-grid">${mods.map((m,i) => `
+      <div class="panel-card" onclick="gotoPage('${m}')">
+        <div class="picon">${icons[i]}</div>
+        <div><div class="ptitle">${labels[i]}</div>
+        <div class="pstatus ${cfgs[i].enabled?'on':'off'}">${cfgs[i].enabled?'● ACTIVO':'○ INACTIVO'}</div></div>
+        <div style="margin-left:auto;color:var(--muted)">›</div>
+      </div>`).join('')}
+    </div>`;
+}
+
+// ── ANTILINKS ─────────────────────────────────
+async function loadAntilinks() {
+  const el = document.getElementById('b-antilinks');
+  if (!guildId) { el.innerHTML = noSrv(); return; }
+  el.innerHTML = loading();
+  const c = await get(`/api/config/antilinks/${guildId}`).catch(() => ({}));
+  el.innerHTML = `
+    <div class="toggle-row"><label>Estado del módulo</label>
+      <label class="toggle"><input type="checkbox" id="al-en" ${c.enabled?'checked':''}><span class="tsl"></span></label>
+    </div>
+    <div class="fg">
+      <div class="field"><label>Acción</label>
+        <select id="al-ac">
+          <option value="mute" ${c.accion==='mute'?'selected':''}>🔇 Mute</option>
+          <option value="kick" ${c.accion==='kick'?'selected':''}>👢 Kick</option>
+          <option value="ban"  ${c.accion==='ban'?'selected':''}>🔨 Ban</option>
+        </select></div>
+      <div class="field"><label>Tiempo mute (segundos)</label>
+        <input type="number" id="al-mt" value="${c.mute_time||600}" min="1"/></div>
+      <div class="field"><label>Permitir invitaciones Discord</label>
+        <select id="al-inv">
+          <option value="true"  ${c.allow_invites?'selected':''}>✅ Sí</option>
+          <option value="false" ${!c.allow_invites?'selected':''}>❌ No</option>
+        </select></div>
+      <div class="field"><label>Canal de logs (ID)</label>
+        <input type="text" id="al-log" value="${c.log_channel||''}" placeholder="123456789012345678"/>
+        <span class="hint">ID del canal de texto</span></div>
+    </div>
+    <div class="sec-title">Whitelist — Usuarios (IDs)</div>
+    <div class="tag-list" id="al-wu">${(c.whitelist_users||[]).map(id=>`<span class="tag">${id}<span class="rm" onclick="rmTag('al-wu','${id}')">×</span></span>`).join('')}</div>
+    <div class="tag-row"><input type="text" id="al-wu-i" placeholder="ID de usuario"/><button class="tag-add" onclick="addTag('al-wu','al-wu-i')">+</button></div>
+    <div class="sec-title">Whitelist — Roles (IDs)</div>
+    <div class="tag-list" id="al-wr">${(c.whitelist_roles||[]).map(id=>`<span class="tag">${id}<span class="rm" onclick="rmTag('al-wr','${id}')">×</span></span>`).join('')}</div>
+    <div class="tag-row"><input type="text" id="al-wr-i" placeholder="ID de rol"/><button class="tag-add" onclick="addTag('al-wr','al-wr-i')">+</button></div>
+    <button class="save-btn" onclick="saveAntilinks()">💾 Guardar</button>`;
+}
+async function saveAntilinks() {
+  try {
+    await post(`/api/config/antilinks/${guildId}`, {
+      enabled: document.getElementById('al-en').checked,
+      accion: document.getElementById('al-ac').value,
+      mute_time: parseInt(document.getElementById('al-mt').value),
+      allow_invites: document.getElementById('al-inv').value === 'true',
+      log_channel: document.getElementById('al-log').value ? parseInt(document.getElementById('al-log').value) : null,
+      whitelist_users: getTags('al-wu').map(Number),
+      whitelist_roles: getTags('al-wr').map(Number)
+    });
+    toast('Anti-Links guardado'); dot('d-antilinks', document.getElementById('al-en').checked);
+  } catch { toast('Error al guardar', 'error'); }
+}
+
+// ── ANTIFLOOD ─────────────────────────────────
+async function loadAntiflood() {
+  const el = document.getElementById('b-antiflood');
+  if (!guildId) { el.innerHTML = noSrv(); return; }
+  el.innerHTML = loading();
+  const c = await get(`/api/config/antiflood/${guildId}`).catch(() => ({}));
+  const s = c.settings || {};
+  el.innerHTML = `
+    <div class="toggle-row"><label>Estado del módulo</label>
+      <label class="toggle"><input type="checkbox" id="af-en" ${c.enabled?'checked':''}><span class="tsl"></span></label>
+    </div>
+    <div class="fg">
+      <div class="field"><label>Nivel de seguridad</label>
+        <select id="af-nv">
+          <option value="bajo"  ${c.nivel==='bajo'?'selected':''}>🟢 Bajo — 7 msg / 3s</option>
+          <option value="medio" ${c.nivel==='medio'||!c.nivel?'selected':''}>🟡 Medio — 5 msg / 4s</option>
+          <option value="alto"  ${c.nivel==='alto'?'selected':''}>🔴 Alto — 3 msg / 5s</option>
+        </select></div>
+      <div class="field"><label>Acción</label>
+        <select id="af-ac">
+          <option value="mute" ${c.accion==='mute'||!c.accion?'selected':''}>🔇 Mute</option>
+          <option value="kick" ${c.accion==='kick'?'selected':''}>👢 Kick</option>
+          <option value="ban"  ${c.accion==='ban'?'selected':''}>🔨 Ban</option>
+        </select></div>
+      <div class="field"><label>Tiempo mute (segundos)</label>
+        <input type="number" id="af-mt" value="${c.mute_time||600}" min="1"/></div>
+      <div class="field"><label>Canal de logs (ID)</label>
+        <input type="text" id="af-log" value="${c.log_channel||''}" placeholder="123456789012345678"/></div>
+    </div>
+    <div class="sec-title">Configuración actual</div>
+    <div style="display:flex;gap:12px;flex-wrap:wrap">
+      <div style="padding:10px 16px;background:rgba(26,111,255,0.08);border:1px solid var(--border2);border-radius:8px;font-family:var(--mono);font-size:12px">📨 Máx: <strong style="color:var(--cyan)">${s.max_messages||5} msg</strong></div>
+      <div style="padding:10px 16px;background:rgba(26,111,255,0.08);border:1px solid var(--border2);border-radius:8px;font-family:var(--mono);font-size:12px">⏱️ Intervalo: <strong style="color:var(--cyan)">${s.interval||4}s</strong></div>
+      <div style="padding:10px 16px;background:rgba(26,111,255,0.08);border:1px solid var(--border2);border-radius:8px;font-family:var(--mono);font-size:12px">🗑️ Borrar: <strong style="color:var(--cyan)">${s.delete_count||2} msg</strong></div>
+    </div>
+    <button class="save-btn" onclick="saveAntiflood()">💾 Guardar</button>`;
+}
+async function saveAntiflood() {
+  try {
+    await post(`/api/config/antiflood/${guildId}`, {
+      enabled: document.getElementById('af-en').checked,
+      nivel: document.getElementById('af-nv').value,
+      accion: document.getElementById('af-ac').value,
+      mute_time: parseInt(document.getElementById('af-mt').value),
+      log_channel: document.getElementById('af-log').value ? parseInt(document.getElementById('af-log').value) : null
+    });
+    toast('Anti-Flood guardado'); dot('d-antiflood', document.getElementById('af-en').checked);
+    loadAntiflood();
+  } catch { toast('Error al guardar', 'error'); }
+}
+
+// ── ANTIPING ──────────────────────────────────
+async function loadAntiping() {
+  const el = document.getElementById('b-antiping');
+  if (!guildId) { el.innerHTML = noSrv(); return; }
+  el.innerHTML = loading();
+  const c = await get(`/api/config/antiping/${guildId}`).catch(() => ({}));
+  el.innerHTML = `
+    <div class="toggle-row"><label>Estado del módulo</label>
+      <label class="toggle"><input type="checkbox" id="ap-en" ${c.enabled?'checked':''}><span class="tsl"></span></label>
+    </div>
+    <div class="fg">
+      <div class="field"><label>Acción</label>
+        <select id="ap-ac">
+          <option value="warn" ${c.accion==='warn'?'selected':''}>⚠️ Warn</option>
+          <option value="mute" ${c.accion==='mute'||!c.accion?'selected':''}>🔇 Mute</option>
+          <option value="kick" ${c.accion==='kick'?'selected':''}>👢 Kick</option>
+          <option value="ban"  ${c.accion==='ban'?'selected':''}>🔨 Ban</option>
+        </select></div>
+      <div class="field"><label>Tiempo mute (segundos)</label>
+        <input type="number" id="ap-mt" value="${c.mute_time||600}" min="1"/></div>
+      <div class="field"><label>Canal de logs (ID)</label>
+        <input type="text" id="ap-log" value="${c.log_channel||''}" placeholder="123456789012345678"/></div>
+    </div>
+    <div class="sec-title">Usuarios Protegidos (no se pueden mencionar)</div>
+    <div class="tag-list" id="ap-pu">${(c.protected_users||[]).map(id=>`<span class="tag">${id}<span class="rm" onclick="rmTag('ap-pu','${id}')">×</span></span>`).join('')}</div>
+    <div class="tag-row"><input type="text" id="ap-pu-i" placeholder="ID de usuario"/><button class="tag-add" onclick="addTag('ap-pu','ap-pu-i')">+</button></div>
+    <div class="sec-title">Roles Protegidos</div>
+    <div class="tag-list" id="ap-pr">${(c.protected_roles||[]).map(id=>`<span class="tag">${id}<span class="rm" onclick="rmTag('ap-pr','${id}')">×</span></span>`).join('')}</div>
+    <div class="tag-row"><input type="text" id="ap-pr-i" placeholder="ID de rol"/><button class="tag-add" onclick="addTag('ap-pr','ap-pr-i')">+</button></div>
+    <div class="sec-title">Whitelist (pueden mencionar sin restricciones)</div>
+    <div class="tag-list" id="ap-wu">${(c.whitelist_users||[]).map(id=>`<span class="tag">${id}<span class="rm" onclick="rmTag('ap-wu','${id}')">×</span></span>`).join('')}</div>
+    <div class="tag-row"><input type="text" id="ap-wu-i" placeholder="ID de usuario"/><button class="tag-add" onclick="addTag('ap-wu','ap-wu-i')">+</button></div>
+    <button class="save-btn" onclick="saveAntiping()">💾 Guardar</button>`;
+}
+async function saveAntiping() {
+  try {
+    await post(`/api/config/antiping/${guildId}`, {
+      enabled: document.getElementById('ap-en').checked,
+      accion: document.getElementById('ap-ac').value,
+      mute_time: parseInt(document.getElementById('ap-mt').value),
+      log_channel: document.getElementById('ap-log').value ? parseInt(document.getElementById('ap-log').value) : null,
+      protected_users: getTags('ap-pu').map(Number),
+      protected_roles: getTags('ap-pr').map(Number),
+      whitelist_users: getTags('ap-wu').map(Number)
+    });
+    toast('Anti-Ping guardado'); dot('d-antiping', document.getElementById('ap-en').checked);
+  } catch { toast('Error al guardar', 'error'); }
+}
+
+// ── ANTIBOTS ──────────────────────────────────
+async function loadAntibots() {
+  const el = document.getElementById('b-antibots');
+  if (!guildId) { el.innerHTML = noSrv(); return; }
+  el.innerHTML = loading();
+  const c = await get(`/api/config/antibots/${guildId}`).catch(() => ({}));
+  el.innerHTML = `
+    <div class="info-box">Expulsa automáticamente a cualquier bot no verificado que entre al servidor y también al usuario que lo invitó.</div>
+    <div class="toggle-row"><label>Estado del módulo</label>
+      <label class="toggle"><input type="checkbox" id="ab-en" ${c.enabled?'checked':''}><span class="tsl"></span></label>
+    </div>
+    <div class="fg">
+      <div class="field"><label>Canal de logs (ID)</label>
+        <input type="text" id="ab-log" value="${c.log_channel||''}" placeholder="123456789012345678"/></div>
+    </div>
+    <button class="save-btn" onclick="saveAntibots()">💾 Guardar</button>`;
+}
+async function saveAntibots() {
+  try {
+    await post(`/api/config/antibots/${guildId}`, {
+      enabled: document.getElementById('ab-en').checked,
+      log_channel: document.getElementById('ab-log').value ? parseInt(document.getElementById('ab-log').value) : null
+    });
+    toast('Anti-Bots guardado'); dot('d-antibots', document.getElementById('ab-en').checked);
+  } catch { toast('Error al guardar', 'error'); }
+}
+
+// ── ANTIALTS ──────────────────────────────────
+async function loadAntialts() {
+  const el = document.getElementById('b-antialts');
+  if (!guildId) { el.innerHTML = noSrv(); return; }
+  el.innerHTML = loading();
+  const c = await get(`/api/config/antialts/${guildId}`).catch(() => ({}));
+  el.innerHTML = `
+    <div class="info-box">Detecta cuentas nuevas (posibles alts) cuando se unen y manda aviso al canal de logs.</div>
+    <div class="fg">
+      <div class="field"><label>Días mínimos de antigüedad</label>
+        <input type="number" id="aa-d" value="${c.dias||7}" min="1"/>
+        <span class="hint">Cuentas con menos días serán marcadas</span></div>
+      <div class="field"><label>Canal de logs (ID)</label>
+        <input type="text" id="aa-log" value="${c.logs||''}" placeholder="123456789012345678"/></div>
+    </div>
+    <button class="save-btn" onclick="saveAntialts()">💾 Guardar</button>`;
+}
+async function saveAntialts() {
+  try {
+    await post(`/api/config/antialts/${guildId}`, {
+      dias: parseInt(document.getElementById('aa-d').value),
+      logs: document.getElementById('aa-log').value ? parseInt(document.getElementById('aa-log').value) : null
+    });
+    toast('Anti-Alts guardado');
+  } catch { toast('Error al guardar', 'error'); }
+}
+
+// ── LOGS ──────────────────────────────────────
+async function loadLogs() {
+  const el = document.getElementById('b-logs');
+  if (!guildId) { el.innerHTML = noSrv(); return; }
+  el.innerHTML = loading();
+  const c = await get(`/api/config/logs/${guildId}`).catch(() => ({}));
+  const cats = c.categories || {};
+  el.innerHTML = `
+    <div class="toggle-row"><label>Estado del módulo</label>
+      <label class="toggle"><input type="checkbox" id="lg-en" ${c.enabled?'checked':''}><span class="tsl"></span></label>
+    </div>
+    <div class="fg">
+      <div class="field"><label>Canal de logs (ID)</label>
+        <input type="text" id="lg-ch" value="${c.channel||''}" placeholder="123456789012345678"/></div>
+    </div>
+    <div class="sec-title">Categorías</div>
+    <div class="cat-grid">
+      ${[['joins','👥 Entradas/Salidas'],['roles','🎭 Roles'],['canales','📺 Canales'],['mensajes','💬 Mensajes'],['servidor','🏠 Servidor']].map(([k,l])=>`
+        <div class="cat-item"><input type="checkbox" id="lg-${k}" ${cats[k]!==false?'checked':''}/><label for="lg-${k}">${l}</label></div>`).join('')}
+    </div>
+    <button class="save-btn" onclick="saveLogs()">💾 Guardar</button>`;
+}
+async function saveLogs() {
+  try {
+    await post(`/api/config/logs/${guildId}`, {
+      enabled: document.getElementById('lg-en').checked,
+      channel: document.getElementById('lg-ch').value ? parseInt(document.getElementById('lg-ch').value) : null,
+      categories: {
+        joins: document.getElementById('lg-joins').checked,
+        roles: document.getElementById('lg-roles').checked,
+        canales: document.getElementById('lg-canales').checked,
+        mensajes: document.getElementById('lg-mensajes').checked,
+        servidor: document.getElementById('lg-servidor').checked
+      }
+    });
+    toast('Logs guardado'); dot('d-logs', document.getElementById('lg-en').checked);
+  } catch { toast('Error al guardar', 'error'); }
+}
+
+// ── VERIFICACION ──────────────────────────────
+async function loadVerificacion() {
+  const el = document.getElementById('b-verificacion');
+  if (!guildId) { el.innerHTML = noSrv(); return; }
+  el.innerHTML = loading();
+  const c = await get(`/api/config/verificacion/${guildId}`).catch(() => ({}));
+  const panels = Object.entries(c);
+  el.innerHTML = `
+    <div class="info-box">Los paneles de verificación se crean desde Discord con el comando <code>/verificacion</code>. Aquí puedes ver la configuración actual de cada panel.</div>
+    ${panels.length === 0
+      ? '<div class="no-server"><div class="ns-icon">✅</div><p>No hay paneles configurados en este servidor.<br>Usa <strong>/verificacion</strong> en Discord para crear uno.</p></div>'
+      : panels.map(([pid, p]) => `
+        <div style="background:rgba(26,111,255,0.06);border:1px solid var(--border);border-radius:9px;padding:14px;margin-bottom:10px">
+          <div style="font-family:var(--mono);font-size:11px;color:var(--cyan);margin-bottom:10px">// PANEL: ${pid}</div>
+          <div class="fg3" style="font-size:13px">
+            <div><span style="color:var(--muted)">Tipo:</span> <strong>${p.tipo||'normal'}</strong></div>
+            <div><span style="color:var(--muted)">Rol dar:</span> <strong>${p.rol_dar||'—'}</strong></div>
+            <div><span style="color:var(--muted)">Rol quitar:</span> <strong>${p.rol_quitar||'—'}</strong></div>
+            <div><span style="color:var(--muted)">Canal logs:</span> <strong>${p.canal_logs||'—'}</strong></div>
+            <div><span style="color:var(--muted)">Max fallos:</span> <strong>${p.max_fallos||'∞'}</strong></div>
+            <div><span style="color:var(--muted)">Cooldown:</span> <strong>${p.cooldown_fallos?p.cooldown_fallos+'s':'—'}</strong></div>
+          </div>
+        </div>`).join('')
+    }`;
+}
+
+// ── WELCOME DM ────────────────────────────────
+async function loadWelcomeDM() {
+  const el = document.getElementById('b-welcomedm');
+  if (!guildId) { el.innerHTML = noSrv(); return; }
+  el.innerHTML = loading();
+  const c = await get(`/api/config/welcomedm/${guildId}`).catch(() => ({}));
+  el.innerHTML = `
+    <div class="info-box">Cuando está activado, ModdyBot envía un mensaje privado de bienvenida a cada nuevo miembro.</div>
+    <div class="toggle-row"><label>Activar Welcome DM</label>
+      <label class="toggle"><input type="checkbox" id="wdm-en" ${c.enabled?'checked':''}><span class="tsl"></span></label>
+    </div>
+    <button class="save-btn" onclick="saveWelcomeDM()">💾 Guardar</button>`;
+}
+async function saveWelcomeDM() {
+  try {
+    await post(`/api/config/welcomedm/${guildId}`, { enabled: document.getElementById('wdm-en').checked });
+    toast('Welcome DM guardado'); dot('d-welcomedm', document.getElementById('wdm-en').checked);
+  } catch { toast('Error al guardar', 'error'); }
+}
+
+// ── BLACKLIST ─────────────────────────────────
+async function loadBlacklist() {
+  const el = document.getElementById('b-blacklist');
+  if (!guildId) { el.innerHTML = noSrv(); return; }
+  el.innerHTML = loading();
+  const c = await get(`/api/config/blacklist/${guildId}`).catch(() => ({users:{}}));
+  const users = Object.entries(c.users || {});
+  el.innerHTML = `
+    <div class="sec-title">Añadir usuario</div>
+    <div class="fg">
+      <div class="field"><label>ID del usuario</label>
+        <input type="text" id="bl-uid" placeholder="123456789012345678"/></div>
+      <div class="field"><label>Acción</label>
+        <select id="bl-ac">
+          <option value="block">🚫 Block</option>
+          <option value="mute">🔇 Mute</option>
+          <option value="kick">👢 Kick</option>
+          <option value="ban">🔨 Ban</option>
+        </select></div>
+      <div class="field"><label>Minutos mute (0 = permanente)</label>
+        <input type="number" id="bl-mn" value="10" min="0"/></div>
+      <div class="field"><label>Razón</label>
+        <input type="text" id="bl-rz" placeholder="Razón de la sanción"/></div>
+    </div>
+    <button class="save-btn" onclick="addBL()">➕ Añadir</button>
+    <div class="sec-title" style="margin-top:24px">Usuarios bloqueados (${users.length})</div>
+    ${users.length === 0
+      ? '<p style="color:var(--muted);font-size:13px">No hay usuarios en la blacklist.</p>'
+      : `<table class="bl-table">
+          <thead><tr><th>ID</th><th>Acción</th><th>Minutos</th><th>Razón</th><th></th></tr></thead>
+          <tbody>${users.map(([uid,d])=>`
+            <tr>
+              <td style="font-family:var(--mono);color:var(--blue2)">${uid}</td>
+              <td><span class="action-badge">${d.accion}</span></td>
+              <td style="color:var(--muted)">${d.accion==='mute'?d.minutos===0?'∞':d.minutos+'min':'—'}</td>
+              <td style="color:var(--muted);font-size:12px">${d.razon}</td>
+              <td><button class="revoke-btn" onclick="rmBL('${uid}')">Eliminar</button></td>
+            </tr>`).join('')}
+          </tbody></table>`
+    }`;
+}
+async function addBL() {
+  const uid = document.getElementById('bl-uid').value.trim();
+  if (!uid) return toast('Introduce un ID', 'error');
+  try {
+    await post(`/api/config/blacklist/${guildId}/add`, {
+      userId: uid,
+      accion: document.getElementById('bl-ac').value,
+      minutos: parseInt(document.getElementById('bl-mn').value),
+      razon: document.getElementById('bl-rz').value || 'Sin razón'
+    });
+    toast('Usuario añadido a la blacklist'); loadBlacklist();
+  } catch { toast('Error al añadir', 'error'); }
+}
+async function rmBL(uid) {
+  try {
+    await del(`/api/config/blacklist/${guildId}/${uid}`);
+    toast('Usuario eliminado'); loadBlacklist();
+  } catch { toast('Error al eliminar', 'error'); }
+}
+
+init();
+</script>
+</body>
+</html>
